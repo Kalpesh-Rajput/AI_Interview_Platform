@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen;
+  }
+}
+
+html:not(.dark) body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+html:not(.dark) .card {
+  @apply border-gray-200 bg-white;
+}
+
+html:not(.dark) .btn-secondary {
+  @apply border-gray-200 bg-gray-100 text-gray-700;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-medium text-white transition hover:bg-accent-light;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-surface-border bg-surface-elevated px-5 py-2.5 text-sm font-medium text-gray-200 transition hover:border-accent/50 hover:text-white;
+  }
+
+  .card {
+    @apply rounded-2xl border border-surface-border bg-surface-card p-6 transition hover:border-accent/30;
+  }
+}
