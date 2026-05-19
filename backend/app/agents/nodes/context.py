@@ -1,7 +1,7 @@
 from app.agents.state import InterviewState
 from app.core.config import get_settings
 from app.schemas.interview import StructuredContext
-from app.services.openrouter import OpenRouterClient, parse_json_response
+from app.services.bedrock import BedrockClient, parse_json_response
 
 CONTEXT_PROMPT = """You are a context extraction agent for technical interviews.
 
@@ -95,7 +95,7 @@ def _normalize_context_data(data: dict) -> dict:
 
 async def context_extraction_agent(state: InterviewState) -> dict:
     settings = get_settings()
-    client = OpenRouterClient()
+    client = BedrockClient()
 
     messages = [
         {

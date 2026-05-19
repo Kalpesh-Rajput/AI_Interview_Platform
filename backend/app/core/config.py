@@ -10,6 +10,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # AWS Bedrock Configuration
+    aws_bearer_token_bedrock: str = ""
+    aws_region: str = "ap-south-1"
+
+    # OpenRouter Configuration (Legacy - kept for backwards compatibility)
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
@@ -17,13 +22,13 @@ class Settings(BaseSettings):
     langsmith_api_url: str = ""
     langsmith_project: str = "Interview Intelligence"
 
-    model_parsing: str = "google/gemini-2.0-flash-001"
-    model_context: str = "google/gemini-2.0-flash-001"
-    model_questions: str = "anthropic/claude-3.5-sonnet"
-    model_explanation: str = "anthropic/claude-3.5-sonnet"
-    model_supervisor: str = "openai/gpt-4.1"
+    model_parsing: str = "google.gemma-3-27b-it"
+    model_context: str = "google.gemma-3-27b-it"
+    model_questions: str = "google.gemma-3-27b-it"
+    model_explanation: str = "google.gemma-3-27b-it"
+    model_supervisor: str = "google.gemma-3-27b-it"
 
-    fallback_models: str = "deepseek/deepseek-chat,openai/gpt-4o-mini"
+    fallback_models: str = ""
 
     max_supervisor_retries: int = 3
     quality_threshold: float = 0.75

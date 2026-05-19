@@ -1,7 +1,7 @@
 from app.agents.state import InterviewState
 from app.core.config import get_settings
 from app.schemas.interview import SupervisorResult
-from app.services.openrouter import OpenRouterClient, parse_json_response
+from app.services.bedrock import BedrockClient, parse_json_response
 
 SUPERVISOR_PROMPT = """You are a supervisor agent validating interview question quality for recruiters.
 
@@ -33,7 +33,7 @@ Questions with explanations:
 
 async def supervisor_agent(state: InterviewState) -> dict:
     settings = get_settings()
-    client = OpenRouterClient()
+    client = BedrockClient()
 
     questions_payload = [q.model_dump() for q in state["questions"]]
 

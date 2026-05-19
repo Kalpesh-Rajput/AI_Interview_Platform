@@ -1,7 +1,7 @@
 from app.agents.state import InterviewState
 from app.core.config import get_settings
 from app.schemas.interview import QuestionItem
-from app.services.openrouter import OpenRouterClient, parse_json_response
+from app.services.bedrock import BedrockClient, parse_json_response
 
 QUESTION_PROMPT = """You are an expert technical interviewer helping recruiters prepare contextual questions.
 
@@ -24,7 +24,7 @@ Distribution specifics:
  - Exactly 10 questions total.
  - Exactly 3 questions must be category `scenario`.
  - The remaining 7 must be category `technical` and among these exactly 4 must be `Medium` and 3 must be `Hard`.
- - No question should be `Easy` — difficulty must be `Medium` or `Hard`.
+ - question difficulty must be `Medium` or `Hard`.
 
 {feedback_block}
 
@@ -48,7 +48,7 @@ Structured context:
 
 async def question_generation_agent(state: InterviewState) -> dict:
     settings = get_settings()
-    client = OpenRouterClient()
+    client = BedrockClient()
 
     feedback_block = ""
     if state.get("supervisor_feedback"):

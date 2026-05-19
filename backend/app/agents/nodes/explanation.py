@@ -1,7 +1,7 @@
 from app.agents.state import InterviewState
 from app.core.config import get_settings
 from app.schemas.interview import QuestionItem
-from app.services.openrouter import OpenRouterClient, parse_json_response
+from app.services.bedrock import BedrockClient, parse_json_response
 
 EXPLANATION_PROMPT = """You are an interview explanation agent helping recruiters understand what each question evaluates.
 
@@ -31,7 +31,7 @@ Role context:
 
 async def explanation_agent(state: InterviewState) -> dict:
     settings = get_settings()
-    client = OpenRouterClient()
+    client = BedrockClient()
 
     questions_payload = [
         {

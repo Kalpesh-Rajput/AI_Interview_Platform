@@ -1,6 +1,6 @@
 from app.agents.state import InterviewState
 from app.schemas.interview import ParsedDocument
-from app.services.openrouter import OpenRouterClient, parse_json_response
+from app.services.bedrock import BedrockClient, parse_json_response
 from app.core.config import get_settings
 
 PARSING_PROMPT = """You are a document parsing agent for interview preparation.
@@ -81,7 +81,7 @@ def _normalize_parsed_data(data: dict) -> dict:
 
 async def parsing_agent(state: InterviewState) -> dict:
     settings = get_settings()
-    client = OpenRouterClient()
+    client = BedrockClient()
 
     jd_parsed = await _parse_document(client, settings.model_parsing, state["jd_text"], "Job Description")
     resume_parsed = await _parse_document(
@@ -92,7 +92,7 @@ async def parsing_agent(state: InterviewState) -> dict:
 
 
 async def _parse_document(
-    client: OpenRouterClient, model: str, content: str, doc_type: str
+    client: BedrockClient, model: str, content: str, doc_type: str
 ) -> ParsedDocument:
     truncated = content[:12000]
     if not truncated.strip():
