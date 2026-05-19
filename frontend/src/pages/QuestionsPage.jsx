@@ -25,11 +25,9 @@ export default function QuestionsPage() {
     <section className="mx-auto max-w-4xl px-6 py-12">
       <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-accent-light">
-            AI Question Workspace
-          </p>
-          <h1 className="mt-1 text-3xl font-bold text-white">Interview Questions</h1>
-          <p className="mt-2 text-gray-400">
+          <p className="section-label">AI Question Workspace</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-ink dark:text-white">Interview Questions</h1>
+          <p className="mt-2 text-ink-muted dark:text-gray-400">
             {technical.length} technical · {scenario.length} scenario
             {meta.qualityScore > 0 && (
               <span className="ml-2 text-gray-500">
@@ -52,21 +50,21 @@ export default function QuestionsPage() {
       </div>
 
       {context && (
-        <div className="card mb-8 text-sm text-gray-400">
+        <div className="card mb-8 text-sm text-ink-muted dark:text-gray-400">
           <p>
-            <span className="font-medium text-gray-300">Stack:</span>{' '}
+            <span className="font-medium text-ink dark:text-gray-300">Stack:</span>{' '}
             {(context.normalized_technologies || context.technical_stack || []).slice(0, 8).join(', ')}
           </p>
           {context.experience_level && (
             <p className="mt-2">
-              <span className="font-medium text-gray-300">Level:</span> {context.experience_level}
+              <span className="font-medium text-ink dark:text-gray-300">Level:</span> {context.experience_level}
             </p>
           )}
         </div>
       )}
 
       <div className="mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-faint dark:text-gray-500">
           Technical & Conceptual ({technical.length})
         </h2>
       </div>
@@ -85,7 +83,7 @@ export default function QuestionsPage() {
       </div>
 
       <div className="mb-6 mt-12">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-faint dark:text-gray-500">
           Scenario Deep Evaluation ({scenario.length})
         </h2>
       </div>

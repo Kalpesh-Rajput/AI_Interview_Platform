@@ -23,8 +23,8 @@ export default function FileUpload({ label, description, fileInfo, onUpload, loa
   return (
     <div className="card flex flex-col gap-4">
       <div>
-        <h3 className="text-lg font-semibold text-white">{label}</h3>
-        <p className="mt-1 text-sm text-gray-400">{description}</p>
+        <h3 className="text-lg font-semibold text-ink dark:text-white">{label}</h3>
+        <p className="mt-1 text-sm text-ink-muted dark:text-gray-400">{description}</p>
       </div>
 
       <label
@@ -37,7 +37,7 @@ export default function FileUpload({ label, description, fileInfo, onUpload, loa
         className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 transition ${
           dragOver
             ? 'border-accent bg-accent/5'
-            : 'border-surface-border hover:border-accent/40 hover:bg-surface-elevated/50'
+            : 'border-cream-dark hover:border-accent/40 hover:bg-cream-muted/50 dark:border-surface-border dark:hover:bg-surface-elevated/50'
         }`}
       >
         <input
@@ -62,16 +62,16 @@ export default function FileUpload({ label, description, fileInfo, onUpload, loa
             <svg className="mx-auto h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="mt-3 text-sm text-gray-300">Drag & drop or click to upload</p>
+            <p className="mt-3 text-sm text-ink-muted dark:text-gray-300">Drag & drop or click to upload</p>
             <p className="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, TXT</p>
           </div>
         )}
       </label>
 
       {fileInfo?.preview && (
-        <div className="rounded-xl bg-surface-elevated/60 p-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">Preview</p>
-          <p className="line-clamp-4 text-sm leading-relaxed text-gray-300">{fileInfo.preview}</p>
+        <div className="rounded-xl bg-cream-muted/80 p-4 dark:bg-surface-elevated/60">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-faint dark:text-gray-500">Preview</p>
+          <p className="line-clamp-4 text-sm leading-relaxed text-ink-muted dark:text-gray-300">{fileInfo.preview}</p>
         </div>
       )}
     </div>

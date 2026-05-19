@@ -37,7 +37,7 @@ export default function QuestionCard({ question, index, note, onNoteChange }) {
           >
             {question.difficulty}
           </span>
-          <span className="rounded-lg border border-surface-border bg-surface-elevated px-2.5 py-1 text-xs text-gray-400">
+          <span className="rounded-lg border border-cream-dark bg-cream-muted px-2.5 py-1 text-xs text-ink-muted dark:border-surface-border dark:bg-surface-elevated dark:text-gray-400">
             {question.related_technology}
           </span>
         </div>
@@ -49,23 +49,23 @@ export default function QuestionCard({ question, index, note, onNoteChange }) {
         </button>
       </div>
 
-      <h3 className="text-base font-medium leading-relaxed text-white md:text-lg">
+      <h3 className="text-base font-medium leading-relaxed text-ink dark:text-white md:text-lg">
         {question.question}
       </h3>
 
-      <p className="mt-4 text-sm leading-relaxed text-gray-400">{question.explanation}</p>
+      <p className="mt-4 text-sm leading-relaxed text-ink-muted dark:text-gray-400">{question.explanation}</p>
 
       {question.answer && (
-        <div className="mt-4 rounded-md bg-surface-elevated/30 p-3">
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500">
+        <div className="mt-4 rounded-md bg-cream-muted/80 p-3 dark:bg-surface-elevated/30">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-ink-faint dark:text-gray-500">
             Answer
           </label>
-          <p className="text-sm leading-relaxed text-gray-300">{question.answer}</p>
+          <p className="text-sm leading-relaxed text-ink-muted dark:text-gray-300">{question.answer}</p>
         </div>
       )}
 
-      <div className="mt-5 border-t border-surface-border pt-4">
-        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500">
+      <div className="mt-5 border-t border-cream-dark pt-4 dark:border-surface-border">
+        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-ink-faint dark:text-gray-500">
           Recruiter Notes
         </label>
         <textarea
@@ -73,7 +73,7 @@ export default function QuestionCard({ question, index, note, onNoteChange }) {
           onChange={(e) => onNoteChange(index, e.target.value)}
           placeholder="Add interview notes, follow-ups, or observations..."
           rows={2}
-          className="w-full resize-none rounded-xl border border-surface-border bg-surface-elevated/50 px-4 py-3 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50"
+          className="w-full resize-none rounded-xl border border-cream-dark bg-white px-4 py-3 text-sm text-ink outline-none transition duration-300 focus:border-accent/50 dark:border-surface-border dark:bg-surface-elevated/50 dark:text-gray-200 dark:placeholder-gray-600"
         />
       </div>
     </article>

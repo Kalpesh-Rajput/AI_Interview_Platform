@@ -4,32 +4,48 @@
 
 @layer base {
   body {
-    @apply min-h-screen;
+    @apply min-h-screen antialiased;
   }
 }
 
 html:not(.dark) body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-cream text-ink;
 }
 
-html:not(.dark) .card {
-  @apply border-gray-200 bg-white;
-}
-
-html:not(.dark) .btn-secondary {
-  @apply border-gray-200 bg-gray-100 text-gray-700;
+html.dark body {
+  @apply bg-surface text-gray-100;
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-medium text-white transition hover:bg-accent-light;
+    @apply inline-flex items-center justify-center rounded-full bg-ink px-7 py-3 text-sm font-medium text-white shadow-soft transition-all duration-300 ease-smooth hover:-translate-y-0.5 hover:bg-ink/90 hover:shadow-soft-lg active:translate-y-0;
+  }
+
+  html.dark .btn-primary {
+    @apply bg-white text-ink hover:bg-gray-100;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-surface-border bg-surface-elevated px-5 py-2.5 text-sm font-medium text-gray-200 transition hover:border-accent/50 hover:text-white;
+    @apply inline-flex items-center justify-center rounded-full border border-cream-dark bg-white px-6 py-2.5 text-sm font-medium text-ink-muted shadow-card transition-all duration-300 ease-smooth hover:-translate-y-0.5 hover:border-accent/30 hover:text-ink hover:shadow-soft active:translate-y-0;
+  }
+
+  html.dark .btn-secondary {
+    @apply border-surface-border bg-surface-elevated text-gray-300 hover:border-accent/40 hover:text-white;
   }
 
   .card {
-    @apply rounded-2xl border border-surface-border bg-surface-card p-6 transition hover:border-accent/30;
+    @apply rounded-3xl border border-cream-dark bg-white p-6 shadow-card transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-accent/20 hover:shadow-soft;
+  }
+
+  html.dark .card {
+    @apply border-surface-border bg-surface-card hover:border-accent/30;
+  }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-accent;
+  }
+
+  html.dark .section-label {
+    @apply text-accent-light;
   }
 }

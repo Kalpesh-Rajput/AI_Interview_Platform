@@ -66,8 +66,8 @@ export default function UploadPage() {
       <LoadingOverlay active={generating} />
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-10">
-          <h1 className="text-3xl font-bold text-white">Upload Workspace</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-bold tracking-tight text-ink dark:text-white">Upload Workspace</h1>
+          <p className="mt-2 text-ink-muted dark:text-gray-400">
             Upload the job description and candidate resume to generate contextual interview questions.
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function UploadPage() {
             {generating ? 'Generating...' : 'Generate 10 Questions'}
           </button>
           {!ready && (
-            <p className="text-sm text-gray-500">Upload both documents to continue</p>
+            <p className="text-sm text-ink-faint dark:text-gray-500">Upload both documents to continue</p>
           )}
         </div>
       </section>
