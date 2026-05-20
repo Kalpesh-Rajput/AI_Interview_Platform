@@ -1,4 +1,4 @@
-# AI Interview Platform - Production Deployment Guide
+# AI Interview Platform - Production Deployment & CI/CD Guide
 
 # Overview
 
@@ -9,37 +9,51 @@ This document explains the complete production deployment process for the AI Int
 * CI/CD → GitHub Actions
 * Repository → GitHub
 
+This setup provides:
+
+* centralized CI/CD
+* automated frontend deployment
+* automated backend deployment
+* production-grade deployment pipeline
+* scalable SaaS architecture
+
 ---
 
-# Architecture
+# Production Architecture
 
-```text
+```text id="m1x6rn"
+Developer Pushes Code
+        ↓
 GitHub Repository
         ↓
 GitHub Actions CI/CD
         ↓
---------------------------------
-|                              |
-Frontend → Vercel             Backend → Render
-|                              |
-React/Vite App                FastAPI Backend
+-------------------------------------
+|                                   |
+Frontend Deployment            Backend Deployment
+(Vercel)                       (Render)
+|                                   |
+React/Vite App                 FastAPI Backend
 ```
 
 ---
 
 # Project Structure
 
-```text
+```text id="wz9g9h"
 project-root/
 │
 ├── frontend/
 │   ├── src/
 │   ├── public/
 │   ├── package.json
+│   ├── vite.config.js
 │   └── .env
 │
 ├── backend/
 │   ├── app/
+│   │   ├── core/
+│   │   ├── routers/
 │   │   └── main.py
 │   ├── requirements.txt
 │   └── .env
@@ -51,7 +65,7 @@ project-root/
 
 ---
 
-# Backend Deployment (Render)
+# Backend Deployment - Render
 
 # Step 1: Create Render Account
 
@@ -67,13 +81,15 @@ project-root/
 1. Click:
    New → Web Service
 
-2. Select GitHub repository.
+2. Connect GitHub repository.
+
+3. Select repository.
 
 ---
 
 # Step 3: Configure Backend
 
-Use these settings:
+Use the following settings:
 
 | Field          | Value                                            |
 | -------------- | ------------------------------------------------ |
@@ -84,19 +100,23 @@ Use these settings:
 
 ---
 
-# Step 4: Add Environment Variables
+# Step 4: Add Backend Environment Variables
 
-Add all backend secrets inside:
+Inside Render:
 
-Render Dashboard → Environment Variables
+```text id="w0wzpb"
+Service → Environment
+```
+
+Add all backend variables.
 
 Example:
 
-```env
+```env id="7xzjlwm"
 OPENAI_API_KEY=your_key
 GROQ_API_KEY=your_key
 JWT_SECRET=your_secret
-DATABASE_URL=your_db_url
+DATABASE_URL=your_database_url
 CORS_ORIGINS=https://your-frontend.vercel.app
 ```
 
@@ -106,13 +126,13 @@ CORS_ORIGINS=https://your-frontend.vercel.app
 
 Click:
 
-```text
+```text id="2mq0tq"
 Create Web Service
 ```
 
-Render will generate a backend URL:
+Render generates backend URL:
 
-```text
+```text id="9qedyo"
 https://your-backend.onrender.com
 ```
 
@@ -122,15 +142,42 @@ https://your-backend.onrender.com
 
 Open:
 
-```text
+```text id="f1fd34"
 https://your-backend.onrender.com/docs
 ```
 
-If Swagger UI opens successfully, backend deployment is working.
+If Swagger UI opens successfully, backend deployment is correct.
 
 ---
 
-# Frontend Deployment (Vercel)
+# Step 7: Generate Render Deploy Hook
+
+Inside Render:
+
+```text id="jv0j4r"
+Service → Settings → Deploy Hook
+```
+
+Generate deploy hook.
+
+Example:
+
+```text id="c4f1v2"
+https://api.render.com/deploy/srv-xxxxx?key=xxxxxxxx
+```
+
+IMPORTANT:
+Store the FULL URL in GitHub Secrets.
+
+NOT only:
+
+```text id="3mkxg9"
+srv-xxxxx
+```
+
+---
+
+# Frontend Deployment - Vercel
 
 # Step 1: Create Vercel Account
 
@@ -167,11 +214,13 @@ If frontend exists inside frontend/ folder:
 
 Inside Vercel:
 
-Settings → Environment Variables
+```text id="0fl2zq"
+Project → Settings → Environment Variables
+```
 
 Add:
 
-```env
+```env id="3knb7l"
 VITE_API_URL=https://your-backend.onrender.com
 ```
 
@@ -181,23 +230,50 @@ VITE_API_URL=https://your-backend.onrender.com
 
 Click:
 
-```text
+```text id="y9jk9z"
 Deploy
 ```
 
-Vercel will generate frontend URL:
+Vercel generates frontend URL:
 
-```text
+```text id="z6ykx1"
 https://your-frontend.vercel.app
+```
+
+---
+
+# Frontend API Configuration
+
+# Wrong Configuration
+
+```javascript id="5lcjlwm"
+baseURL: "http://localhost:8000"
+```
+
+This causes production CORS errors.
+
+---
+
+# Correct Configuration
+
+```javascript id="6l18fb"
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  timeout: 180000,
+});
+
+export default api;
 ```
 
 ---
 
 # Backend CORS Configuration
 
-Update Render Environment Variable:
+# Render Environment Variable
 
-```env
+```env id="35j11w"
 CORS_ORIGINS=https://your-frontend.vercel.app
 ```
 
@@ -205,9 +281,7 @@ CORS_ORIGINS=https://your-frontend.vercel.app
 
 # FastAPI CORS Setup
 
-Inside backend:
-
-```python
+```python id="ayr7c5"
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
@@ -224,28 +298,11 @@ app.add_middleware(
 
 ---
 
-# Frontend API Configuration
-
-Correct frontend axios configuration:
-
-```javascript
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  timeout: 180000,
-});
-
-export default api;
-```
-
----
-
 # GitHub Actions CI/CD Setup
 
 # Step 1: Create Workflow Folder
 
-```text
+```text id="ifdrkm"
 .github/workflows/
 ```
 
@@ -253,18 +310,16 @@ export default api;
 
 # Step 2: Create Workflow File
 
-File:
-
-```text
+```text id="1q84uq"
 .github/workflows/ci-cd.yml
 ```
 
 ---
 
-# Production CI/CD Workflow
+# Final Production CI/CD Workflow
 
-```yaml
-name: Production CI/CD
+```yaml id="7lbjlwm"
+name: Full Stack CI/CD
 
 on:
   push:
@@ -273,72 +328,78 @@ on:
 
 jobs:
 
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    # =========================
+    # Checkout Repository
+    # =========================
 
-      # =========================
-      # FRONTEND
-      # =========================
+    - name: Checkout Repo
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    # =========================
+    # FRONTEND DEPLOYMENT
+    # =========================
 
-      - name: Install Frontend Dependencies
-        working-directory: frontend
-        run: npm ci
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
 
-      - name: Pull Vercel Environment
-        working-directory: frontend
-        run: |
-          vercel pull --yes \
-          --environment=production \
-          --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Install Vercel CLI
+      run: npm install --global vercel
 
-      - name: Build Frontend
-        working-directory: frontend
-        run: |
-          vercel build --prod \
-          --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Pull Vercel Environment
+      run: |
+        cd frontend
+        vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy Frontend
-        working-directory: frontend
-        run: |
-          vercel deploy --prebuilt --prod \
-          --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Build Frontend
+      run: |
+        cd frontend
+        vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      # =========================
-      # BACKEND
-      # =========================
+    - name: Deploy Frontend to Vercel
+      run: |
+        cd frontend
+        vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    # =========================
+    # BACKEND DEPLOYMENT
+    # =========================
 
-      - name: Install Backend Dependencies
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: pip
 
-      - name: Verify Backend
-        working-directory: backend
-        run: |
-          python -c "import app.main; print('Backend imports successfully')"
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Deploy Backend to Render
-        run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    - name: Verify Backend Import
+      env:
+        CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+      run: |
+        cd backend
+        python -c "import app.main; print('Backend imports successfully')"
+
+    - name: Deploy Backend to Render
+      run: |
+        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
 ```
 
 ---
@@ -347,7 +408,9 @@ jobs:
 
 Inside GitHub Repository:
 
+```text id="y8q2m9"
 Settings → Secrets and Variables → Actions
+```
 
 Add:
 
@@ -356,7 +419,8 @@ Add:
 | VERCEL_TOKEN           | Vercel deployment authentication |
 | VERCEL_ORG_ID          | Vercel organization ID           |
 | VERCEL_PROJECT_ID      | Vercel project ID                |
-| RENDER_DEPLOY_HOOK_URL | Render deploy hook URL           |
+| RENDER_DEPLOY_HOOK_URL | Full Render deploy hook URL      |
+| CORS_ORIGINS           | Frontend production URL          |
 
 ---
 
@@ -375,148 +439,162 @@ Add:
 
 Run locally:
 
-```bash
+```bash id="rjlwmj"
 cd frontend
 vercel link
 ```
 
 File created:
 
-```text
+```text id="z5n5e2"
 frontend/.vercel/project.json
 ```
 
 Example:
 
-```json
+```json id="dxndqg"
 {
   "projectId": "prj_xxxxx",
   "orgId": "team_xxxxx"
 }
 ```
 
----
-
-# Getting Render Deploy Hook
-
-Inside Render:
-
-```text
-Service → Settings → Deploy Hook
-```
-
-Generate hook.
-
-Example:
-
-```text
-https://api.render.com/deploy/srv-xxxxx?key=xxxxx
-```
+Add these values to GitHub Secrets.
 
 ---
 
-# Production Deployment Flow
+# Common Production Errors
 
-```text
+# 1. Frontend Calling localhost
+
+Problem:
+
+```text id="vf0b0s"
+http://localhost:8000
+```
+
+Fix:
+
+```javascript id="h38af7"
+import.meta.env.VITE_API_URL
+```
+
+---
+
+# 2. CORS Error
+
+Problem:
+
+```text id="4mxq2n"
+No 'Access-Control-Allow-Origin'
+```
+
+Fix:
+
+```env id="jlwm1p"
+CORS_ORIGINS=https://your-frontend.vercel.app
+```
+
+---
+
+# 3. GitHub Actions Backend Validation Failure
+
+Problem:
+
+```text id="4s6c5n"
+Field required: cors_origins
+```
+
+Fix:
+
+```yaml id="67jlwm"
+env:
+  CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+```
+
+---
+
+# 4. Render Deploy Hook Failure
+
+Problem:
+
+```text id="kswdv6"
+curl: (6) Could not resolve host
+```
+
+Cause:
+Only service ID stored instead of full deploy hook URL.
+
+Wrong:
+
+```text id="yq18gw"
+srv-xxxxx
+```
+
+Correct:
+
+```text id="hl0njh"
+https://api.render.com/deploy/srv-xxxxx?key=xxxxxxxx
+```
+
+---
+
+# 5. Vercel Deployment Failure
+
+Cause:
+Missing secrets.
+
+Required:
+
+* VERCEL_TOKEN
+* VERCEL_ORG_ID
+* VERCEL_PROJECT_ID
+
+---
+
+# Final Production Flow
+
+```text id="shq2kp"
 Developer Pushes Code
         ↓
 GitHub Actions Triggered
         ↓
-Frontend Build & Deploy (Vercel)
+Frontend Build & Deploy
         ↓
 Backend Validation
         ↓
-Render Deployment Triggered
+Render Deploy Triggered
         ↓
 Production Updated
 ```
 
 ---
 
-# Common Production Errors
-
-# 1. CORS Error
-
-Cause:
-
-* frontend URL not added in backend CORS
-
-Fix:
-
-```env
-CORS_ORIGINS=https://your-frontend.vercel.app
-```
-
----
-
-# 2. Frontend Calling localhost
-
-Wrong:
-
-```javascript
-http://localhost:8000
-```
-
-Correct:
-
-```javascript
-import.meta.env.VITE_API_URL
-```
-
----
-
-# 3. Render Build Failure
-
-Cause:
-
-* missing dependencies
-
-Fix:
-
-* ensure requirements.txt contains all packages
-
----
-
-# 4. Vercel Deployment Failure
-
-Cause:
-
-* missing Vercel secrets
-
-Fix:
-
-* add:
-
-  * VERCEL_TOKEN
-  * VERCEL_ORG_ID
-  * VERCEL_PROJECT_ID
-
----
-
-# Production Recommendations
-
-# Security
+# Security Recommendations
 
 * Never expose API keys in frontend
-* Use environment variables
+* Use GitHub Secrets
 * Restrict CORS origins
-* Rotate secrets regularly
+* Use HTTPS everywhere
+* Rotate tokens periodically
 
 ---
 
-# Scalability
+# Future Scalability Improvements
 
-Future improvements:
+Future production upgrades:
 
 * Docker
 * Kubernetes
 * Redis caching
-* PostgreSQL
+* PostgreSQL scaling
 * Monitoring
 * Logging
 * Staging environment
 * Blue/Green deployment
+* Canary releases
 * Load balancing
+* CDN optimization
 
 ---
 
@@ -524,15 +602,16 @@ Future improvements:
 
 After setup:
 
-```text
+```bash id="lsk0fv"
 git push origin main
 ```
 
 automatically:
 
-* deploys frontend
-* deploys backend
+* deploys frontend to Vercel
+* deploys backend to Render
+* validates backend
 * updates production application
-* runs through centralized CI/CD
+* runs centralized CI/CD pipeline
 
-This creates a production-grade deployment architecture suitable for enterprise SaaS applications.
+This creates a scalable enterprise-grade deployment architecture for the AI Interview Platform.
