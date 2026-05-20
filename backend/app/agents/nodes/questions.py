@@ -13,13 +13,13 @@ Distribution (strict):
 - 3 scenario-based deep evaluation questions (category: "scenario")
 
 Requirements:
-- Questions must reference JD technologies and resume projects/experience where relevant.
+- Technical questions must reference JD technologies, role requirements, and resume context where relevant.
 - Avoid generic textbook questions (e.g. "What is OOP?", "Explain REST").
 - Technical questions should test: understanding, implementation, architecture, debugging, real-world reasoning.
 - Scenario questions must simulate real production situations: outages, scaling, API failures, performance, deployment, DB optimization, etc.
 - Scenario questions should feel like senior engineer interview discussions.
-- Scenario questions must be based on the candidate's actual resume experience items and projects. Use the resume experience section to ground each scenario.
-- Do NOT invent new candidate experiences, companies, or accomplishments that are not present in the resume.
+- Only scenario questions must be based on the candidate's actual resume experience items and projects; use the resume experience section to ground those scenarios.
+- Do NOT invent new candidate experiences, companies, or accomplishments that are not present in the resume for scenario questions.
 - Ensure each question is unique and not repeated or lightly paraphrased.
 - Difficulty must be one of: Medium, Hard
 - Do NOT include explanations yet (only question, difficulty, related_technology, category, answer).
