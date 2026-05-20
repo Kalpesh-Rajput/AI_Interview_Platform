@@ -1,9 +1,9 @@
-```yaml
-name: CI/CD Deployment
+name: Full Stack CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
 
@@ -12,17 +12,21 @@ jobs:
 
     steps:
 
+    # =========================
     # Checkout Repository
+    # =========================
     - name: Checkout Repo
       uses: actions/checkout@v4
 
-    # ---------------- FRONTEND ----------------
+    # =========================
+    # FRONTEND DEPLOYMENT
+    # =========================
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
-        cache: 'npm'
+        node-version: 18
+        cache: npm
         cache-dependency-path: frontend/package-lock.json
 
     - name: Install Frontend Dependencies
@@ -30,34 +34,35 @@ jobs:
         cd frontend
         npm ci
 
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm run build -- --mode production
-
-    # Install Vercel CLI
     - name: Install Vercel CLI
       run: npm install --global vercel
 
-    # Pull Vercel Environment
     - name: Pull Vercel Environment
       run: |
         cd frontend
         vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-    # Deploy Frontend
+    # Build frontend locally
+    - name: Build Frontend
+      run: |
+        cd frontend
+        vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+    # Deploy frontend to Vercel
     - name: Deploy Frontend to Vercel
       run: |
         cd frontend
-        vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-    # ---------------- BACKEND ----------------
+    # =========================
+    # BACKEND DEPLOYMENT
+    # =========================
 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-        cache: 'pip'
+        python-version: "3.11"
+        cache: pip
 
     - name: Install Backend Dependencies
       run: |
@@ -65,7 +70,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Check Backend Import
+    - name: Verify Backend Import
       run: |
         cd backend
         python -c "import app.main; print('Backend imports successfully')"
@@ -73,7 +78,4 @@ jobs:
     # Trigger Render Deployment
     - name: Deploy Backend to Render
       run: |
-        curl -X POST \
-        "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}" \
-        -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
-```
+        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
