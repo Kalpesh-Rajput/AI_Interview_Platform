@@ -71,6 +71,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Verify Backend Import
+      env:
+        CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
       run: |
         cd backend
         python -c "import app.main; print('Backend imports successfully')"
