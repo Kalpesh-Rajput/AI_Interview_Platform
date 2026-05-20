@@ -9,16 +9,16 @@ QUESTION_PROMPT = """You are an expert technical interviewer helping recruiters 
 Generate EXACTLY 10 interview questions based on the structured context below.
 
 Distribution (strict):
-- 7 technical/conceptual questions (category: "technical")
-- 3 scenario-based deep evaluation questions (category: "scenario")
+- 7 knowledge-checking questions (category: "technical") - based SOLELY on job description skills and requirements
+- 3 scenario-based deep evaluation questions (category: "scenario") - based EXCLUSIVELY on candidate's actual resume experience
 
 Requirements:
-- Technical questions must reference JD technologies, role requirements, and resume context where relevant.
+- Technical questions (first 7) must be based ONLY on the job description technologies and role requirements. They should test the candidate's knowledge, understanding, and depth in the required skills for this role.
 - Avoid generic textbook questions (e.g. "What is OOP?", "Explain REST").
-- Technical questions should test: understanding, implementation, architecture, debugging, real-world reasoning.
-- Scenario questions must simulate real production situations: outages, scaling, API failures, performance, deployment, DB optimization, etc.
+- Technical questions should test: conceptual understanding, implementation knowledge, architectural awareness, debugging approach, and real-world reasoning related to the job requirements.
+- Scenario questions (last 3) must simulate real production situations: outages, scaling, API failures, performance, deployment, DB optimization, etc.
 - Scenario questions should feel like senior engineer interview discussions.
-- Only scenario questions must be based on the candidate's actual resume experience items and projects; use the resume experience section to ground those scenarios.
+- Scenario questions must be based EXCLUSIVELY on the candidate's actual resume experience items and projects. Do NOT invent, assume, or extrapolate any experience not explicitly stated in the resume.
 - Do NOT invent new candidate experiences, companies, or accomplishments that are not present in the resume for scenario questions.
 - Ensure each question is unique and not repeated or lightly paraphrased.
 - Difficulty must be one of: Medium, Hard
@@ -45,11 +45,11 @@ Return ONLY valid JSON with EXACTLY this structure; include an `answer` field wi
     ]
 }}
 
-Candidate resume experience items:
-{resume_experience}
-
-Structured context:
+Job description context (for technical questions):
 {context}
+
+Candidate resume experience (for scenario questions ONLY):
+{resume_experience}
 """
 
 
