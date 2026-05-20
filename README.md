@@ -27,7 +27,7 @@ Upload → Parsing Agent → Context Extraction → Question Generation
 4. **Explanation** — concise recruiter-focused explanations
 5. **Supervisor** — validates quality; triggers regeneration if needed
 
-## Quick Start
+## Quick Start  
 
 ### Prerequisites
 
