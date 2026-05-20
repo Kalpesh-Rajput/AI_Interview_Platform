@@ -1,3 +1,4 @@
+import json
 from app.agents.state import InterviewState
 from app.core.config import get_settings
 from app.schemas.interview import QuestionItem
@@ -17,6 +18,9 @@ Requirements:
 - Technical questions should test: understanding, implementation, architecture, debugging, real-world reasoning.
 - Scenario questions must simulate real production situations: outages, scaling, API failures, performance, deployment, DB optimization, etc.
 - Scenario questions should feel like senior engineer interview discussions.
+- Scenario questions must be based on the candidate's actual resume experience items and projects. Use the resume experience section to ground each scenario.
+- Do NOT invent new candidate experiences, companies, or accomplishments that are not present in the resume.
+- Ensure each question is unique and not repeated or lightly paraphrased.
 - Difficulty must be one of: Medium, Hard
 - Do NOT include explanations yet (only question, difficulty, related_technology, category, answer).
 
@@ -28,7 +32,7 @@ Distribution specifics:
 
 {feedback_block}
 
-Return ONLY valid JSON with EXACTLY this structure; include an `answer` field with a detailed response of 4-6 sentences explaining the concepts, reasoning, and practical implications:
+Return ONLY valid JSON with EXACTLY this structure; include an `answer` field with a detailed response of 6-8 sentences explaining the correct approach, reasoning, and practical implications, including concrete examples, comparisons, and tradeoffs:
 {{
     "questions": [
         {{
@@ -40,6 +44,9 @@ Return ONLY valid JSON with EXACTLY this structure; include an `answer` field wi
         }}
     ]
 }}
+
+Candidate resume experience items:
+{resume_experience}
 
 Structured context:
 {context}
@@ -57,11 +64,13 @@ async def question_generation_agent(state: InterviewState) -> dict:
             f"{state['supervisor_feedback']}\n"
         )
 
+    resume_experience = state["resume_parsed"].experience if state.get("resume_parsed") else []
     messages = [
         {
             "role": "user",
             "content": QUESTION_PROMPT.format(
                 context=state["context"].model_dump_json(),
+                resume_experience=json.dumps(resume_experience, ensure_ascii=False, indent=2),
                 feedback_block=feedback_block,
             ),
         }

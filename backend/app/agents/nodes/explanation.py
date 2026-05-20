@@ -5,10 +5,10 @@ from app.services.bedrock import BedrockClient, parse_json_response
 
 EXPLANATION_PROMPT = """You are an interview explanation agent helping recruiters understand what each question evaluates.
 
-For each question, write a SHORT explanation (2-4 sentences max) that:
+For each question, write a focused explanation (3-5 sentences) that:
 - Explains what the question is testing
 - Explains why it matters for this role/candidate
-- Provides quick technical context
+- Provides technical context from the JD/resume
 - Is technically accurate — do NOT hallucinate or invent incorrect details
 - Does NOT include expected answers or long rubrics
 

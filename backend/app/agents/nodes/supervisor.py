@@ -10,8 +10,10 @@ Evaluate the 10 questions and their explanations against these criteria:
 2. Contextual relevance to JD and resume
 3. Non-generic, practical questions
 4. Exactly 7 technical + 3 realistic scenario questions
-5. Explanation accuracy and conciseness (not too long, no expected answers)
-6. Recruiter usefulness
+5. Explanation accuracy and usefulness (clear, grounded, not misleading)
+6. Answers must be detailed and substantive, not short or superficial
+7. All question texts must be unique and not repeated or paraphrased duplicates
+8. Scenario questions must be grounded in candidate resume experience and not invented
 
 Return ONLY valid JSON with this structure:
 {{
