@@ -14,8 +14,8 @@ Analyze the parsed job description and resume data. Return ONLY valid JSON with 
 - resume_summary: (string) 2-3 sentence summary of candidate
 - experience_level: (string) One of: Junior, Mid, Senior, or Lead
 - jd_explanation_for_hr: (string) A brief, non-technical explanation (3-4 sentences) of the Job Description, written specifically for HR/recruiters who do not have a technical background, explaining what the role does and why it is important.
-- extracted_skills_with_levels: (list of objects) Every technical skill, language, database, tool, or concept found in the Job Description, along with its required/preferred level of experience or proficiency (e.g. Mid, Senior, Lead, Intermediate, Advanced, etc.). Each object MUST have "skill" and "level" keys. Do NOT omit any skill mentioned.
-- self_rating_questions: (list of strings) Exactly 5 basic questions asking the candidate how they would rate themselves for these extracted skills and to explain their experience (e.g., "On a scale of 1 to 10, how would you rate your proficiency in Python, and what real-world projects support this rating?").
+- extracted_skills_with_levels: (list of objects) Every technical skill, language, database, tool, or concept found ONLY in the Job Description. Do NOT include skills that are present only in the resume but not in the JD. Each object MUST have "skill" and "level" keys. Do NOT omit any skill mentioned in the JD.
+- self_rating_questions: (list of strings) Exactly 5 core conceptual or practical questions derived ONLY from the skills mentioned in the Job Description. Do NOT ask the candidate to rate themselves (e.g. do NOT ask "On a scale of 1 to 10...", "how would you rate your proficiency...", or "explain your level of skill"). Instead, ask direct, open-ended technical questions testing their experience or knowledge of those skills.
 
 Example response:
 {{
@@ -33,16 +33,18 @@ Example response:
     {{"skill": "REST APIs", "level": "Advanced"}}
   ],
   "self_rating_questions": [
-    "On a scale of 1-10, how would you rate your experience and proficiency with Python?",
-    "How would you rate your skills in React and building responsive frontends?",
-    "How would you rate your experience in designing and developing REST APIs?",
-    "On a scale of 1-10, how comfortable are you with SQL databases and query optimization?",
-    "How would you rate your experience in team collaboration and agile workflows?"
+    "How many years of hands-on experience do you have with Python asyncio and asynchronous backend programming?",
+    "What rating would you give yourself for managing complex state in React applications?",
+    "How confident are you in implementing REST API security, authentication, and performance best practices?",
+    "What is your understanding of database indexing and SQL query optimization techniques?",
+    "Which CI/CD tools and deployment automation platforms have you worked with in production environments?"
   ]
 }}
 
 Rules:
-- Merge JD requirements with resume evidence
+- Merge JD requirements with resume evidence for fields other than extracted_skills_with_levels and self_rating_questions
+- The extracted_skills_with_levels and self_rating_questions MUST be extracted/derived ONLY from the Job Description (JD), NOT from the resume.
+- Do NOT include any "rate yourself", "on a scale of 1-10", or self-rating questions. Generate direct technical/practical questions for the JD skills.
 - Be specific and accurate based on inputs
 - If data is missing, use appropriate defaults
 - Max 15 items per list (except extracted_skills_with_levels which should capture all skills in JD)

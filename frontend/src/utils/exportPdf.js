@@ -41,16 +41,16 @@ export function exportQuestionsToPdf(questions, notes = {}, meta = {}, context =
     }
 
     if (context.extracted_skills_with_levels && context.extracted_skills_with_levels.length > 0) {
-      addLine('Required Skills & Proficiency Levels', 13, true);
+      addLine('Required Skills', 13, true);
       const skillsText = context.extracted_skills_with_levels
-        .map(item => `${item.skill} (${item.level || 'Mid'})`)
+        .map(item => item.skill)
         .join(', ');
       addLine(skillsText, 10);
       y += 8;
     }
 
     if (context.self_rating_questions && context.self_rating_questions.length > 0) {
-      addLine('Candidate Self-Rating Questions (Basic)', 13, true);
+      addLine('Core Skill Questions', 13, true);
       context.self_rating_questions.forEach((q, idx) => {
         addLine(`${idx + 1}. ${q}`, 10);
       });

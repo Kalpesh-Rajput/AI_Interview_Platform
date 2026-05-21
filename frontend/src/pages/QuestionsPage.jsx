@@ -80,31 +80,30 @@ export default function QuestionsPage() {
             )}
           </div>
 
-          {/* Skills and Levels Grid */}
+          {/* Required Skills Box */}
           <div>
-            <h3 className="section-label mb-4">Required Skills & Proficiency Levels</h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {(context.extracted_skills_with_levels || []).map((item, idx) => (
-                <div key={`skill-${idx}`} className="flex flex-col justify-between rounded-2xl border border-cream-dark bg-white p-3.5 shadow-card transition-all duration-300 hover:border-accent/30 dark:border-surface-border dark:bg-surface-card">
-                  <span className="text-[10px] font-semibold text-ink-faint dark:text-gray-500 uppercase tracking-wider">Skill</span>
-                  <span className="text-sm font-bold text-ink dark:text-white mt-1 break-words">{item.skill}</span>
-                  <span className="mt-2 inline-flex self-start rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent-light dark:bg-accent/20">
-                    {item.level || "Mid"}
+            <h3 className="section-label mb-3">Required Skills from JD</h3>
+            <div className="rounded-2xl border border-cream-dark bg-white p-4 shadow-card dark:border-surface-border dark:bg-surface-card">
+              <div className="flex flex-wrap gap-2">
+                {(context.extracted_skills_with_levels || []).map((item, idx) => (
+                  <span
+                    key={`skill-${idx}`}
+                    className="inline-flex items-center rounded-lg bg-accent/10 px-3 py-1.5 text-sm font-semibold text-accent-light dark:bg-accent/20"
+                  >
+                    {item.skill}
                   </span>
-                </div>
-              ))}
-              {(!context.extracted_skills_with_levels || context.extracted_skills_with_levels.length === 0) && (
-                <div className="col-span-full text-center text-sm text-ink-faint py-4">
-                  No skills extracted.
-                </div>
-              )}
+                ))}
+                {(!context.extracted_skills_with_levels || context.extracted_skills_with_levels.length === 0) && (
+                  <span className="text-sm text-ink-faint">No skills extracted.</span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Self-Rating Questions */}
           {context.self_rating_questions && context.self_rating_questions.length > 0 && (
             <div>
-              <h3 className="section-label mb-4">Candidate Self-Rating Questions (Basic)</h3>
+              <h3 className="section-label mb-4">Core Skill Questions</h3>
               <div className="space-y-3">
                 {context.self_rating_questions.map((q, idx) => (
                   <div key={`rating-q-${idx}`} className="flex items-start justify-between gap-4 rounded-2xl border border-cream-dark bg-white p-4 shadow-card hover:border-accent/20 dark:border-surface-border dark:bg-surface-card">
