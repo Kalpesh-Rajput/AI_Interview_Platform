@@ -20,6 +20,11 @@ class ParsedDocument(BaseModel):
     frameworks_tools: list[str] = Field(default_factory=list)
 
 
+class SkillWithLevel(BaseModel):
+    skill: str
+    level: str
+
+
 class StructuredContext(BaseModel):
     technical_stack: list[str] = Field(default_factory=list)
     normalized_technologies: list[str] = Field(default_factory=list)
@@ -28,6 +33,9 @@ class StructuredContext(BaseModel):
     jd_summary: str = ""
     resume_summary: str = ""
     experience_level: str = ""
+    jd_explanation_for_hr: str = ""
+    extracted_skills_with_levels: list[SkillWithLevel] = Field(default_factory=list)
+    self_rating_questions: list[str] = Field(default_factory=list)
 
 
 class SupervisorResult(BaseModel):

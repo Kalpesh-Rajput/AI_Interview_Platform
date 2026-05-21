@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import { useInterview } from '../context/InterviewContext';
@@ -5,6 +6,7 @@ import { exportQuestionsToPdf } from '../utils/exportPdf';
 
 export default function QuestionsPage() {
   const { questions, notes, setNotes, meta, context, reset } = useInterview();
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   if (!questions?.length) {
     return <Navigate to="/upload" replace />;
@@ -18,7 +20,13 @@ export default function QuestionsPage() {
   };
 
   const handleExport = () => {
-    exportQuestionsToPdf(questions, notes, meta);
+    exportQuestionsToPdf(questions, notes, meta, context);
+  };
+
+  const copyRatingQuestion = async (text, index) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
@@ -50,15 +58,72 @@ export default function QuestionsPage() {
       </div>
 
       {context && (
-        <div className="card mb-8 text-sm text-ink-muted dark:text-gray-400">
-          <p>
-            <span className="font-medium text-ink dark:text-gray-300">Stack:</span>{' '}
-            {(context.normalized_technologies || context.technical_stack || []).slice(0, 8).join(', ')}
-          </p>
-          {context.experience_level && (
-            <p className="mt-2">
-              <span className="font-medium text-ink dark:text-gray-300">Level:</span> {context.experience_level}
+        <div className="mb-10 space-y-8">
+          {/* HR Overview Card */}
+          <div className="card border-accent/20 bg-accent/5 dark:bg-accent/5">
+            <h2 className="text-lg font-bold text-accent dark:text-accent-light flex items-center gap-2">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Recruiter's JD Intel Overview
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-ink-muted dark:text-gray-300">
+              {context.jd_explanation_for_hr || context.jd_summary || "No description available."}
             </p>
+            {context.experience_level && (
+              <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-ink-muted dark:text-gray-400">
+                <span>Role Seniority Level:</span>
+                <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs text-accent-light dark:bg-accent/20">
+                  {context.experience_level}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Skills and Levels Grid */}
+          <div>
+            <h3 className="section-label mb-4">Required Skills & Proficiency Levels</h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {(context.extracted_skills_with_levels || []).map((item, idx) => (
+                <div key={`skill-${idx}`} className="flex flex-col justify-between rounded-2xl border border-cream-dark bg-white p-3.5 shadow-card transition-all duration-300 hover:border-accent/30 dark:border-surface-border dark:bg-surface-card">
+                  <span className="text-[10px] font-semibold text-ink-faint dark:text-gray-500 uppercase tracking-wider">Skill</span>
+                  <span className="text-sm font-bold text-ink dark:text-white mt-1 break-words">{item.skill}</span>
+                  <span className="mt-2 inline-flex self-start rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent-light dark:bg-accent/20">
+                    {item.level || "Mid"}
+                  </span>
+                </div>
+              ))}
+              {(!context.extracted_skills_with_levels || context.extracted_skills_with_levels.length === 0) && (
+                <div className="col-span-full text-center text-sm text-ink-faint py-4">
+                  No skills extracted.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Self-Rating Questions */}
+          {context.self_rating_questions && context.self_rating_questions.length > 0 && (
+            <div>
+              <h3 className="section-label mb-4">Candidate Self-Rating Questions (Basic)</h3>
+              <div className="space-y-3">
+                {context.self_rating_questions.map((q, idx) => (
+                  <div key={`rating-q-${idx}`} className="flex items-start justify-between gap-4 rounded-2xl border border-cream-dark bg-white p-4 shadow-card hover:border-accent/20 dark:border-surface-border dark:bg-surface-card">
+                    <div className="flex gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent-light mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <p className="text-sm font-medium text-ink dark:text-gray-200 mt-1">{q}</p>
+                    </div>
+                    <button
+                      onClick={() => copyRatingQuestion(q, idx)}
+                      className="btn-secondary !px-3 !py-1 text-xs shrink-0 self-center"
+                    >
+                      {copiedIndex === idx ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
