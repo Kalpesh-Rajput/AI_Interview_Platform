@@ -39,9 +39,33 @@ export default function UploadPage() {
     }
   };
 
+  const handleJdTextChange = (text) => {
+    if (!text) {
+      setJd({ filename: '', text: '', preview: '' });
+    } else {
+      setJd({
+        filename: 'Pasted Job Description',
+        text: text,
+        preview: text.slice(0, 500),
+      });
+    }
+  };
+
+  const handleResumeTextChange = (text) => {
+    if (!text) {
+      setResume({ filename: '', text: '', preview: '' });
+    } else {
+      setResume({
+        filename: 'Pasted Resume',
+        text: text,
+        preview: text.slice(0, 500),
+      });
+    }
+  };
+
   const handleGenerate = async () => {
     if (!jd.text || !resume.text) {
-      setError('Please upload both a job description and a resume.');
+      setError('Please upload or paste both a job description and a resume.');
       return;
     }
     setError('');
@@ -68,7 +92,7 @@ export default function UploadPage() {
         <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-ink dark:text-white">Upload Workspace</h1>
           <p className="mt-2 text-ink-muted dark:text-gray-400">
-            Upload the job description and candidate resume to generate contextual interview questions.
+            Upload or paste the job description and candidate resume to generate contextual interview questions.
           </p>
         </div>
 
@@ -81,10 +105,12 @@ export default function UploadPage() {
         <div className="grid gap-8 lg:grid-cols-2">
           <FileUpload
             label="Job Description"
-            description="Role requirements, tech stack, and responsibilities"
+            description="Role requirements and responsibilities"
             fileInfo={jd}
             onUpload={handleJD}
             loading={jdLoading}
+            onTextChange={handleJdTextChange}
+            placeholder="Paste the complete job description details including requirements and responsibilities here..."
           />
           <FileUpload
             label="Candidate Resume"
@@ -92,6 +118,8 @@ export default function UploadPage() {
             fileInfo={resume}
             onUpload={handleResume}
             loading={resumeLoading}
+            onTextChange={handleResumeTextChange}
+            placeholder="Paste the candidate's resume text, including work history, technical skills, projects, and education here..."
           />
         </div>
 
@@ -104,7 +132,7 @@ export default function UploadPage() {
             {generating ? 'Generating...' : 'Generate 10 Questions'}
           </button>
           {!ready && (
-            <p className="text-sm text-ink-faint dark:text-gray-500">Upload both documents to continue</p>
+            <p className="text-sm text-ink-faint dark:text-gray-500">Provide both documents to continue</p>
           )}
         </div>
       </section>

@@ -13,9 +13,9 @@ Analyze the parsed job description and resume data. Return ONLY valid JSON with 
 - jd_summary: (string) 2-3 sentence summary of job description
 - resume_summary: (string) 2-3 sentence summary of candidate
 - experience_level: (string) One of: Junior, Mid, Senior, or Lead
-- jd_explanation_for_hr: (string) A brief, non-technical explanation (3-4 sentences) of the Job Description, written specifically for HR/recruiters who do not have a technical background, explaining what the role does and why it is important.
+- jd_explanation_for_hr: (string) A comprehensive, clear, and detailed explanation of the role expectations mentioned in the Job Description. It must be written in a highly professional and easy-to-understand way (5-8 sentences), specifically outlining what the candidate will be doing, the core expectations of the role, the business or technical impact of their work, and why this position is crucial for the team's success. Make sure to capture the expectations and requirements of the role in depth.
 - extracted_skills_with_levels: (list of objects) Every technical skill, language, database, tool, or concept found ONLY in the Job Description. Do NOT include skills that are present only in the resume but not in the JD. Each object MUST have "skill" and "level" keys. Do NOT omit any skill mentioned in the JD.
-- self_rating_questions: (list of strings) Exactly 5 core conceptual or practical questions derived ONLY from the skills mentioned in the Job Description. Do NOT ask the candidate to rate themselves (e.g. do NOT ask "On a scale of 1 to 10...", "how would you rate your proficiency...", or "explain your level of skill"). Instead, ask direct, open-ended technical questions testing their experience or knowledge of those skills.
+- self_rating_questions: (list of strings) Exactly 5 concise, punchy, and conversational single-liner screening questions based on the core skills or tools in the Job Description. Each question must have a natural human touch (easy and friendly for a recruiter to ask) and ask the candidate about their years of experience, self-rated level (e.g., out of 10 or Beginner/Intermediate/Expert), or confidence/understanding level for that specific skill or tool.
 
 Example response:
 {{
@@ -26,25 +26,25 @@ Example response:
   "jd_summary": "Looking for...",
   "resume_summary": "Experienced...",
   "experience_level": "Mid",
-  "jd_explanation_for_hr": "This role is for a software engineer who will build web applications. They will use Python for backend logic and React for the user interface. Their work will help our customers have a faster and smoother checkout experience.",
+  "jd_explanation_for_hr": "This role is for a Senior Software Engineer who will spearhead the design and development of our next-generation web platforms. The candidate is expected to architect robust, scalable backend APIs using Python (FastAPI/Django) and construct highly responsive, fluid user interfaces with React and Tailwind CSS. They will collaborate closely with product managers and UX designers to translate business requirements into efficient technical solutions. Beyond writing high-quality code, the engineer will champion engineering best practices, mentor junior team members, and drive containerization and CI/CD automation efforts. Ultimately, their contributions will directly enhance platform reliability, optimize database performance, and deliver a frictionless user experience for millions of global customers.",
   "extracted_skills_with_levels": [
     {{"skill": "Python", "level": "Mid"}},
     {{"skill": "React", "level": "Intermediate"}},
     {{"skill": "REST APIs", "level": "Advanced"}}
   ],
   "self_rating_questions": [
-    "How many years of hands-on experience do you have with Python asyncio and asynchronous backend programming?",
-    "What rating would you give yourself for managing complex state in React applications?",
-    "How confident are you in implementing REST API security, authentication, and performance best practices?",
-    "What is your understanding of database indexing and SQL query optimization techniques?",
-    "Which CI/CD tools and deployment automation platforms have you worked with in production environments?"
+    "How many years have you worked with Python, and how would you rate yourself out of 10?",
+    "How would you rate your experience with React (Beginner, Mid, or Expert), and what is your rating out of 10?",
+    "What is your self-rating out of 10 for building REST APIs, and what is your total years of experience?",
+    "How confident are you with database indexing and query optimization on a scale of 1 to 10?",
+    "Have you set up production CI/CD pipelines before, and how would you rate your expertise?"
   ]
 }}
 
 Rules:
 - Merge JD requirements with resume evidence for fields other than extracted_skills_with_levels and self_rating_questions
 - The extracted_skills_with_levels and self_rating_questions MUST be extracted/derived ONLY from the Job Description (JD), NOT from the resume.
-- Do NOT include any "rate yourself", "on a scale of 1-10", or self-rating questions. Generate direct technical/practical questions for the JD skills.
+- All self_rating_questions MUST be short, punchy, conversational single-liners (with a friendly human touch) testing years of experience or self-ratings for core JD skills. They must be direct and easy to ask.
 - Be specific and accurate based on inputs
 - If data is missing, use appropriate defaults
 - Max 15 items per list (except extracted_skills_with_levels which should capture all skills in JD)
@@ -104,7 +104,7 @@ def _normalize_context_data(data: dict) -> dict:
     jd_explanation_keys = ["jd_explanation_for_hr", "jd_explanation", "explanation_for_hr", "hr_explanation", "hr_jd_summary", "jd_hr_explanation"]
     for key in jd_explanation_keys:
         if key in data:
-            normalized["jd_explanation_for_hr"] = str(data[key])[:800]
+            normalized["jd_explanation_for_hr"] = str(data[key])[:3000]
             break
 
     skills_keys = ["extracted_skills_with_levels", "skills_with_levels", "skills_levels"]

@@ -30,7 +30,7 @@ export function exportQuestionsToPdf(questions, notes = {}, meta = {}, context =
 
   if (context) {
     if (context.jd_explanation_for_hr || context.jd_summary) {
-      addLine("Recruiter's JD Intel Overview", 13, true);
+      addLine("Role Expectation Overview", 13, true);
       addLine(context.jd_explanation_for_hr || context.jd_summary, 10);
       y += 8;
     }
