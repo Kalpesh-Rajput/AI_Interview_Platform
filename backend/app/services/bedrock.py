@@ -18,43 +18,14 @@ except ImportError:
     raise ImportError("boto3 is required for Bedrock integration. Install it with: pip install boto3")
 
 try:
-    from langsmith.client import Client as LangSmithClient
-    from langsmith.schemas import RunTypeEnum
-except ImportError:  # pragma: no cover
-    LangSmithClient = None  # type: ignore[assignment]
-    RunTypeEnum = None  # type: ignore[assignment]
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 logger = logging.getLogger(__name__)
-
-
-class LangSmithLogger:
-    def __init__(self, settings):
-        self.enabled = False
-        self.client = None
-        self.project_name = settings.langsmith_project
-        if not settings.langsmith_enabled or LangSmithClient is None:
-            return
-        try:
-            self.client = LangSmithClient(
-                api_key=settings.langsmith_api_key,
-                api_url=settings.langsmith_api_url or None,
-            )
-            self.enabled = True
-        except Exception as exc:
-            logger.warning("LangSmith initialization failed: %s", exc)
-
-    def create_run(self, name: str, inputs: dict[str, Any], run_type: str = "llm") -> None:
-        if not self.enabled or self.client is None:
-            return
-        try:
-            self.client.create_run(
-                name=name,
-                inputs=inputs,
-                run_type=RunTypeEnum.llm if RunTypeEnum is not None else run_type,
-                project_name=self.project_name,
-            )
-        except Exception as exc:
-            logger.warning("LangSmith run logging failed: %s", exc)
 
 
 class BedrockError(Exception):
@@ -66,7 +37,6 @@ class BedrockClient:
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.langsmith = LangSmithLogger(self.settings)
         self._executor = ThreadPoolExecutor(max_workers=3)
         self._initialize_client()
 
@@ -133,23 +103,7 @@ class BedrockClient:
                 models.append(m)
         return models
 
-    def _log_langsmith_run(
-        self,
-        operation: str | None,
-        model: str,
-        messages: list[dict[str, str]],
-        content: str,
-    ) -> None:
-        """Log run to LangSmith if enabled."""
-        if not self.langsmith.enabled:
-            return
-        run_name = f"Interview Intelligence: {operation or 'bedrock_invoke'}"
-        inputs = {
-            "model": model,
-            "messages": messages,
-            "response": content,
-        }
-        self.langsmith.create_run(run_name, inputs, run_type="llm")
+
 
     def _prepare_bedrock_messages(self, messages: list[dict[str, str]]) -> str:
         """Convert OpenAI-style messages to Bedrock prompt format."""
@@ -165,6 +119,7 @@ class BedrockClient:
                 prompt_parts.append(f"Assistant: {content}")
         return "\n".join(prompt_parts)
 
+    @traceable(name="Bedrock Chat Completion", run_type="llm")
     async def chat_completion(
         self,
         model: str,
@@ -209,8 +164,84 @@ class BedrockClient:
                         timeout=120.0,
                     )
 
-                    content = response
-                    self._log_langsmith_run(operation, attempt_model, messages, content)
+                    res_dict = response
+                    content = res_dict["content"]
+                    input_tokens = res_dict["input_tokens"]
+                    output_tokens = res_dict["output_tokens"]
+
+                    try:
+                        from langsmith import get_current_run_tree
+                        run_tree = get_current_run_tree()
+                        if run_tree:
+                            if run_tree.metadata is None:
+                                run_tree.metadata = {}
+                            run_tree.metadata.update({
+                                "ls_provider": "bedrock",
+                                "ls_model_name": attempt_model,
+                            })
+                            if input_tokens is not None or output_tokens is not None:
+                                from app.core.config import estimate_cost
+                                cost_dict = estimate_cost(attempt_model, input_tokens or 0, output_tokens or 0)
+                                
+                                usage_block = {
+                                    "input_tokens": input_tokens or 0,
+                                    "output_tokens": output_tokens or 0,
+                                    "total_tokens": (input_tokens or 0) + (output_tokens or 0),
+                                    "prompt_tokens": input_tokens or 0,
+                                    "completion_tokens": output_tokens or 0,
+                                    "input_cost": cost_dict["input_cost"],
+                                    "output_cost": cost_dict["output_cost"],
+                                    "total_cost": cost_dict["total_cost"]
+                                }
+                                
+                                try:
+                                    if run_tree.outputs is None:
+                                        run_tree.outputs = {}
+                                    run_tree.outputs["usage_metadata"] = usage_block
+                                    run_tree.outputs["response_metadata"] = {
+                                        "token_usage": {
+                                            "prompt_tokens": input_tokens or 0,
+                                            "completion_tokens": output_tokens or 0,
+                                            "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                        }
+                                    }
+                                except Exception as set_exc:
+                                    logger.warning("Failed to set usage_metadata in outputs: %s", set_exc)
+
+                                try:
+                                    if run_tree.extra is None:
+                                        run_tree.extra = {}
+                                    run_tree.extra["token_usage"] = {
+                                        "prompt_tokens": input_tokens or 0,
+                                        "completion_tokens": output_tokens or 0,
+                                        "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                    }
+                                    run_tree.extra["usage_metadata"] = usage_block
+                                    
+                                    # update metadata (which is stored in extra['metadata'])
+                                    if run_tree.metadata is not None:
+                                        run_tree.metadata["usage_metadata"] = usage_block
+                                        run_tree.metadata["token_usage"] = {
+                                            "prompt_tokens": input_tokens or 0,
+                                            "completion_tokens": output_tokens or 0,
+                                            "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                        }
+                                except Exception as set_exc:
+                                    logger.warning("Failed to set extra/metadata token usage: %s", set_exc)
+                                try:
+                                    from app.core.config import token_tracker
+                                    tracker = token_tracker.get()
+                                    if tracker is not None:
+                                        tracker["prompt_tokens"] += input_tokens or 0
+                                        tracker["completion_tokens"] += output_tokens or 0
+                                        tracker["input_cost"] = tracker.get("input_cost", 0.0) + cost_dict["input_cost"]
+                                        tracker["output_cost"] = tracker.get("output_cost", 0.0) + cost_dict["output_cost"]
+                                        tracker["total_cost"] = tracker.get("total_cost", 0.0) + cost_dict["total_cost"]
+                                except Exception as tracker_exc:
+                                    logger.warning("Failed to update token tracker: %s", tracker_exc)
+                    except Exception as exc:
+                        logger.warning("Failed to log usage to LangSmith: %s", exc)
+
                     return content.strip()
 
                 except asyncio.TimeoutError:
@@ -261,8 +292,8 @@ class BedrockClient:
 
         raise BedrockError(f"All model attempts failed. Last error: {last_error}")
 
-    def _invoke_bedrock(self, model: str, body: str) -> str:
-        """Synchronous wrapper for Bedrock API call."""
+    def _invoke_bedrock(self, model: str, body: str) -> dict[str, Any]:
+        """Synchronous wrapper for Bedrock API call returning content and token usage."""
         try:
             response = self.client.invoke_model(
                 modelId=model,
@@ -273,28 +304,67 @@ class BedrockClient:
 
             response_body = json.loads(response["body"].read().decode("utf-8"))
 
+            # Extract input and output tokens from headers/body
+            input_tokens = None
+            output_tokens = None
+
+            headers = response.get("ResponseMetadata", {}).get("HTTPHeaders", {})
+            for key in ["x-amzn-bedrock-input-token-count", "X-Amzn-Bedrock-Input-Token-Count", "x-amzn-bedrock-input-token-count".lower()]:
+                if key in headers:
+                    try:
+                        input_tokens = int(headers[key])
+                        break
+                    except (ValueError, TypeError):
+                        pass
+
+            for key in ["x-amzn-bedrock-output-token-count", "X-Amzn-Bedrock-Output-Token-Count", "x-amzn-bedrock-output-token-count".lower()]:
+                if key in headers:
+                    try:
+                        output_tokens = int(headers[key])
+                        break
+                    except (ValueError, TypeError):
+                        pass
+
+            if input_tokens is None or output_tokens is None:
+                usage = response_body.get("usage", {})
+                if usage:
+                    if input_tokens is None:
+                        input_tokens = usage.get("input_tokens") or usage.get("prompt_tokens")
+                    if output_tokens is None:
+                        output_tokens = usage.get("output_tokens") or usage.get("completion_tokens")
+                if input_tokens is None:
+                    input_tokens = response_body.get("input_token_count") or response_body.get("prompt_token_count")
+                if output_tokens is None:
+                    output_tokens = response_body.get("output_token_count") or response_body.get("completion_token_count")
+
             # Extract content from response based on model type
+            content = ""
             # Handle OpenAI-style format (choices array)
             if "choices" in response_body:
                 choices = response_body["choices"]
                 if isinstance(choices, list) and len(choices) > 0:
                     message = choices[0].get("message", {})
-                    return message.get("content", "")
+                    content = message.get("content", "")
             # Handle Bedrock native format
             elif "content" in response_body:
                 content = response_body["content"]
                 if isinstance(content, list) and len(content) > 0:
-                    return content[0].get("text", "")
+                    content = content[0].get("text", "")
             elif "output" in response_body:
-                return response_body["output"]
+                content = response_body["output"]
             elif "completion" in response_body:
-                return response_body["completion"]
+                content = response_body["completion"]
             elif "text" in response_body:
-                return response_body["text"]
+                content = response_body["text"]
+            else:
+                logger.warning("Unexpected Bedrock response format: %s", response_body)
+                content = json.dumps(response_body)
 
-            # Fallback: convert entire response to string
-            logger.warning("Unexpected Bedrock response format: %s", response_body)
-            return json.dumps(response_body)
+            return {
+                "content": content,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens
+            }
 
         except json.JSONDecodeError as exc:
             raise BedrockError(f"Failed to parse Bedrock response JSON: {exc}") from exc
@@ -306,6 +376,7 @@ class BedrockClient:
                 return msg.get("content", "")
         return ""
 
+    @traceable(name="Bedrock Stream Completion", run_type="llm")
     async def stream_completion(
         self,
         model: str,

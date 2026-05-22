@@ -7,43 +7,14 @@ import httpx
 from app.core.config import get_settings
 
 try:
-    from langsmith.client import Client as LangSmithClient
-    from langsmith.schemas import RunTypeEnum
-except ImportError:  # pragma: no cover
-    LangSmithClient = None  # type: ignore[assignment]
-    RunTypeEnum = None  # type: ignore[assignment]
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 logger = logging.getLogger(__name__)
-
-
-class LangSmithLogger:
-    def __init__(self, settings):
-        self.enabled = False
-        self.client = None
-        self.project_name = settings.langsmith_project
-        if not settings.langsmith_enabled or LangSmithClient is None:
-            return
-        try:
-            self.client = LangSmithClient(
-                api_key=settings.langsmith_api_key,
-                api_url=settings.langsmith_api_url or None,
-            )
-            self.enabled = True
-        except Exception as exc:
-            logger.warning("LangSmith initialization failed: %s", exc)
-
-    def create_run(self, name: str, inputs: dict[str, Any], run_type: str = "llm") -> None:
-        if not self.enabled or self.client is None:
-            return
-        try:
-            self.client.create_run(
-                name=name,
-                inputs=inputs,
-                run_type=RunTypeEnum.llm if RunTypeEnum is not None else run_type,
-                project_name=self.project_name,
-            )
-        except Exception as exc:
-            logger.warning("LangSmith run logging failed: %s", exc)
 
 
 class OpenRouterError(Exception):
@@ -53,7 +24,6 @@ class OpenRouterError(Exception):
 class OpenRouterClient:
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.langsmith = LangSmithLogger(self.settings)
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -72,23 +42,9 @@ class OpenRouterClient:
                 models.append(m)
         return models
 
-    def _log_langsmith_run(
-        self,
-        operation: str | None,
-        model: str,
-        messages: list[dict[str, str]],
-        content: str,
-    ) -> None:
-        if not self.langsmith.enabled:
-            return
-        run_name = f"Interview Intelligence: {operation or 'chat_completion'}"
-        inputs = {
-            "model": model,
-            "messages": messages,
-            "response": content,
-        }
-        self.langsmith.create_run(run_name, inputs, run_type="llm")
 
+
+    @traceable(name="OpenRouter Chat Completion", run_type="llm")
     async def chat_completion(
         self,
         model: str,
@@ -138,7 +94,84 @@ class OpenRouterClient:
 
                     data = response.json()
                     content = data["choices"][0]["message"]["content"]
-                    self._log_langsmith_run(operation, attempt_model, messages, content)
+
+                    usage = data.get("usage", {})
+                    input_tokens = usage.get("prompt_tokens")
+                    output_tokens = usage.get("completion_tokens")
+
+                    try:
+                        from langsmith import get_current_run_tree
+                        run_tree = get_current_run_tree()
+                        if run_tree:
+                            if run_tree.metadata is None:
+                                run_tree.metadata = {}
+                            run_tree.metadata.update({
+                                "ls_provider": "openrouter",
+                                "ls_model_name": attempt_model,
+                            })
+                            if input_tokens is not None or output_tokens is not None:
+                                from app.core.config import estimate_cost
+                                cost_dict = estimate_cost(attempt_model, input_tokens or 0, output_tokens or 0)
+                                
+                                usage_block = {
+                                    "input_tokens": input_tokens or 0,
+                                    "output_tokens": output_tokens or 0,
+                                    "total_tokens": (input_tokens or 0) + (output_tokens or 0),
+                                    "prompt_tokens": input_tokens or 0,
+                                    "completion_tokens": output_tokens or 0,
+                                    "input_cost": cost_dict["input_cost"],
+                                    "output_cost": cost_dict["output_cost"],
+                                    "total_cost": cost_dict["total_cost"]
+                                }
+                                
+                                try:
+                                    if run_tree.outputs is None:
+                                        run_tree.outputs = {}
+                                    run_tree.outputs["usage_metadata"] = usage_block
+                                    run_tree.outputs["response_metadata"] = {
+                                        "token_usage": {
+                                            "prompt_tokens": input_tokens or 0,
+                                            "completion_tokens": output_tokens or 0,
+                                            "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                        }
+                                    }
+                                except Exception as set_exc:
+                                    logger.warning("Failed to set usage_metadata in outputs: %s", set_exc)
+
+                                try:
+                                    if run_tree.extra is None:
+                                        run_tree.extra = {}
+                                    run_tree.extra["token_usage"] = {
+                                        "prompt_tokens": input_tokens or 0,
+                                        "completion_tokens": output_tokens or 0,
+                                        "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                    }
+                                    run_tree.extra["usage_metadata"] = usage_block
+                                    
+                                    # update metadata (which is stored in extra['metadata'])
+                                    if run_tree.metadata is not None:
+                                        run_tree.metadata["usage_metadata"] = usage_block
+                                        run_tree.metadata["token_usage"] = {
+                                            "prompt_tokens": input_tokens or 0,
+                                            "completion_tokens": output_tokens or 0,
+                                            "total_tokens": (input_tokens or 0) + (output_tokens or 0)
+                                        }
+                                except Exception as set_exc:
+                                    logger.warning("Failed to set extra/metadata token usage: %s", set_exc)
+                                try:
+                                    from app.core.config import token_tracker
+                                    tracker = token_tracker.get()
+                                    if tracker is not None:
+                                        tracker["prompt_tokens"] += input_tokens or 0
+                                        tracker["completion_tokens"] += output_tokens or 0
+                                        tracker["input_cost"] = tracker.get("input_cost", 0.0) + cost_dict["input_cost"]
+                                        tracker["output_cost"] = tracker.get("output_cost", 0.0) + cost_dict["output_cost"]
+                                        tracker["total_cost"] = tracker.get("total_cost", 0.0) + cost_dict["total_cost"]
+                                except Exception as tracker_exc:
+                                    logger.warning("Failed to update token tracker: %s", tracker_exc)
+                    except Exception as exc:
+                        logger.warning("Failed to log usage to LangSmith: %s", exc)
+
                     return content.strip()
 
                 except httpx.RequestError as exc:
@@ -154,6 +187,7 @@ class OpenRouterClient:
             f"All model attempts failed. Last error: {last_error}"
         )
 
+    @traceable(name="OpenRouter Stream Completion", run_type="llm")
     async def stream_completion(
         self,
         model: str,
