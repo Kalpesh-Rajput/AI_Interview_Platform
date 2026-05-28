@@ -13,7 +13,8 @@ Distribution (strict):
 - 3 scenario-based deep evaluation questions (category: "scenario") - based EXCLUSIVELY on candidate's actual resume experience
 
 Requirements:
-- Technical questions (first 7) must be based ONLY on the job description technologies and role requirements. They should test the candidate's knowledge, understanding, and depth in the required skills for this role.
+- Technical questions (first 7) must be based ONLY on the job description technologies and role requirements.
+- CRITICAL: If the job description explicitly mentions 'client requirements', prioritize these heavily; the majority of the technical questions must be derived directly from those specific requirements.
 - Avoid generic textbook questions (e.g. "What is OOP?", "Explain REST").
 - Technical questions should test: conceptual understanding, implementation knowledge, architectural awareness, debugging approach, and real-world reasoning related to the job requirements.
 - Scenario questions (last 3) must simulate real production situations: outages, scaling, API failures, performance, deployment, DB optimization, etc.

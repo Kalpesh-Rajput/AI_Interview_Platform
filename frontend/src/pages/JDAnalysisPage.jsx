@@ -86,22 +86,6 @@ export default function JDAnalysisPage() {
         )}
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-faint dark:text-gray-500">
-          Sample Technical Questions ({technical.length})
-        </h2>
-      </div>
-      <div className="space-y-6">
-        {technical.map((q, i) => (
-          <QuestionCard
-            key={`q-${i}`}
-            question={q}
-            index={i}
-            note=""
-            onNoteChange={() => {}}
-          />
-        ))}
-      </div>
     </section>
   );
 }
