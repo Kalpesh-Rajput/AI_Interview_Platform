@@ -8,7 +8,7 @@ export default function QuestionsPage() {
   const { questions, notes, setNotes, meta, context, reset } = useInterview();
   const [copiedIndex, setCopiedIndex] = useState(null);
 
-  if (!questions?.length) {
+  if (!questions?.length && !context) {
     return <Navigate to="/upload" replace />;
   }
 

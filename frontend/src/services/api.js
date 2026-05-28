@@ -36,4 +36,20 @@ export async function generateQuestions(jdText, resumeText) {
   return data;
 }
 
+export async function generateJdOnly(jdText) {
+  const { data } = await api.post('/api/interview/generate-jd-only', {
+    jd_text: jdText,
+  });
+
+  return data;
+}
+
+export async function suggestRoles(resumeText) {
+  const { data } = await api.post('/api/interview/suggest-roles', {
+    resume_text: resumeText,
+  });
+
+  return data;
+}
+
 export default api;

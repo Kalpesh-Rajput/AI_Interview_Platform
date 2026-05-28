@@ -3,6 +3,10 @@ import logging
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.agents.graph import run_interview_pipeline
+from app.agents.nodes.context import context_extraction_agent
+from app.agents.nodes.parsing import parsing_agent
+from app.agents.nodes.roles import role_suggestion_agent
+from app.agents.nodes.jd_only_questions import jd_only_question_agent
 from app.schemas.interview import (
     GenerateRequest,
     GenerateResponse,
@@ -75,3 +79,54 @@ async def generate_questions(payload: GenerateRequest):
         retries=result.get("retries", 0),
         quality_score=result.get("quality_score", 0.0),
     )
+
+
+@router.post("/generate-jd-only", response_model=GenerateResponse)
+async def generate_jd_only(payload: dict):
+    jd_text = payload.get("jd_text", "").strip()
+    if not jd_text:
+        raise HTTPException(status_code=400, detail="Job description text is required.")
+
+    try:
+        # Simulate InterviewState for parsing and context extraction
+        state = {
+            "jd_text": jd_text,
+            "resume_text": "No resume provided",
+            "retry_count": 0,
+            "supervisor_feedback": "",
+        }
+
+        # Run parsing
+        parsing_result = await parsing_agent(state)
+        state.update(parsing_result)
+
+        # Run context extraction
+        context_result = await context_extraction_agent(state)
+        state.update(context_result)
+
+        # Generate 5 technical questions based on context
+        questions = await jd_only_question_agent(state["context"].model_dump_json())
+
+        return GenerateResponse(
+            questions=questions,
+            context=state["context"],
+            retries=0,
+            quality_score=1.0,
+        )
+    except Exception as exc:
+        logger.exception("JD-only generation failed")
+        raise HTTPException(status_code=500, detail=f"Generation failed: {exc}")
+
+
+@router.post("/suggest-roles")
+async def suggest_roles(payload: dict):
+    resume_text = payload.get("resume_text", "").strip()
+    if not resume_text:
+        raise HTTPException(status_code=400, detail="Resume text is required.")
+
+    try:
+        roles = await role_suggestion_agent(resume_text)
+        return {"suggested_roles": roles}
+    except Exception as exc:
+        logger.exception("Role suggestion failed")
+        raise HTTPException(status_code=500, detail=f"Role suggestion failed: {exc}")

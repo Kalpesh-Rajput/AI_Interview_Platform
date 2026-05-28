@@ -7,6 +7,7 @@ export function InterviewProvider({ children }) {
   const [resume, setResume] = useState({ filename: '', text: '', preview: '' });
   const [questions, setQuestions] = useState([]);
   const [context, setContext] = useState(null);
+  const [suggestedRoles, setSuggestedRoles] = useState(null);
   const [notes, setNotes] = useState({});
   const [meta, setMeta] = useState({ retries: 0, qualityScore: 0 });
 
@@ -15,6 +16,7 @@ export function InterviewProvider({ children }) {
     setResume({ filename: '', text: '', preview: '' });
     setQuestions([]);
     setContext(null);
+    setSuggestedRoles(null);
     setNotes({});
     setMeta({ retries: 0, qualityScore: 0 });
   };
@@ -30,6 +32,8 @@ export function InterviewProvider({ children }) {
         setQuestions,
         context,
         setContext,
+        suggestedRoles,
+        setSuggestedRoles,
         notes,
         setNotes,
         meta,
