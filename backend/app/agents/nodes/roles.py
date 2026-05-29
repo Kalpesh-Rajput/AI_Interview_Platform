@@ -83,8 +83,26 @@ async def role_suggestion_agent(resume_text: str) -> list:
         for role in suggestions:
             required = role.get("required_skills", [])
             matched = role.get("matched_skills", [])
+            
+            # Normalize required skills for comparison (lowercase and stripped)
+            required_normalized = {r.strip().lower(): r for r in required}
+            
+            # Filter matched_skills to only include those in required_skills, preserving the order and exact casing from required_skills
+            actual_matched = []
+            seen = set()
+            for m in matched:
+                m_norm = m.strip().lower()
+                if m_norm in required_normalized:
+                    original_req_skill = required_normalized[m_norm]
+                    if original_req_skill not in seen:
+                        actual_matched.append(original_req_skill)
+                        seen.add(original_req_skill)
+            
+            # Update the role's matched_skills
+            role["matched_skills"] = actual_matched
+            
             if required:
-                skill_match_pct = (len(matched) / len(required)) * 100
+                skill_match_pct = (len(actual_matched) / len(required)) * 100
             else:
                 skill_match_pct = 0
             # Round to two decimal places for consistency
