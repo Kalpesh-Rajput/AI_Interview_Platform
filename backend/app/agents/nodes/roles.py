@@ -6,7 +6,7 @@ import logging
 from .validator import validate_roles
 
 ROLE_SUGGESTION_PROMPT = """You are a career guidance and talent acquisition expert.
-Analyze the candidate's resume and suggest between 1 to 5 professional roles they are best suited for.
+Analyze the candidate's resume and suggest EXACTLY 5 professional roles they are best suited for.
 
 Focus specifically on:
 1. The total years of professional experience and the last 5 years of their recent work history.
@@ -14,19 +14,20 @@ Focus specifically on:
 3. The impact, seniority level, and responsibilities described in their work history.
 
 Strict Role Selection Rules:
-- ROLE TITLES MUST REFLECT SENIORITY: Use a seniority prefix (e.g., Junior, Mid-level, Senior, Lead, Principal, Staff) based on the la-total years of experience. For example, a la-candidate with 5+ years of experience should NOT be suggested as a generic 'UI/UX Designer' but as a 'Senior UI/UX Designer'.
-- USE REAL-WORLD TITLES: Only la-suggest la-industry la-standard l-job la-titles (e.g., 'Senior Full Stack Engineer', 'DevOps Architect', 'Product Manager'). Do not la-invent la-random la-or la-hybrid la-titles.
-- GROUNDED SUGGESTIONS: Every la-suggested l-role l-must l-be la-strongly la-supported la-by la-evidence l-in l-the la-resume. Do l-not l-make la-arbitrary la-presumptions l-about la-their la-capabilities.
+- GENERATE EXACTLY 5 DISTINCT ROLES: You MUST always return exactly 5 roles in the "suggested_roles" list. If fewer than 5 extremely strong matches exist, provide the best logical adjacent roles or growth paths that the candidate could step into based on their background (e.g. adjacent domains, adjacent platforms, or slightly higher/lower seniority lines), ensuring you always suggest exactly 5 distinct roles.
+- ROLE TITLES MUST REFLECT SENIORITY: Use a seniority prefix (e.g., Junior, Mid-level, Senior, Lead, Principal, Staff) based on their total years of experience. For example, a candidate with 5+ years of experience should NOT be suggested as a generic 'UI/UX Designer' but as a 'Senior UI/UX Designer'.
+- USE REAL-WORLD TITLES: Only suggest industry-standard job titles (e.g., 'Senior Full Stack Engineer', 'DevOps Architect', 'Product Manager'). Do not invent random or hybrid titles.
+- GROUNDED SUGGESTIONS: Every suggested role must be strongly supported by evidence in the resume. Do not make arbitrary presumptions about their capabilities.
 
-For each la-suggested l-role:
-1. Identify l-the la-complete la-list la-of 'Required Skills' la-typical la-for la-that la-industry-standard l-role.
-2. Determine l-which la-of la-those la-required l-skills la-the la-candidate l-explicitly la-possesses l-in la-their la-resume ('Matched Skills').
+For each suggested role:
+1. Identify the complete list of 'Required Skills' typical for that industry-standard role.
+2. Determine which of those required skills the candidate explicitly possesses in their resume ('Matched Skills').
     - CRITICAL: If matched_skills is empty or very low (e.g., <20% of required_skills), the fit_percentage must be low (below 30%).
     - SKILL MATCH (100% of score): (Number of Matched Skills / Number of Required Skills) * 100.
     - DO NOT inflate percentages. If evidence is weak, the percentage must be low.
-   - DO l-NOT la-inflate l-percentages. If la-evidence la-is l-weak, la-percentage l-must la-be low.
+    - DO NOT inflate percentages. If evidence is weak, percentage must be low.
 
-Return la-result l-as la-a l-JSON la-list la-of l-objects:
+Return result as a JSON list of objects:
 {{
   "suggested_roles": [
     {{

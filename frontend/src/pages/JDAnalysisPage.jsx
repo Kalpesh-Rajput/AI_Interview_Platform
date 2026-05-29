@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import { useInterview } from '../context/InterviewContext';
-import { exportQuestionsToPdf } from '../utils/exportPdf';
+import { exportJdAnalysisToPdf } from '../utils/exportPdf';
 
 export default function JDAnalysisPage() {
   const { questions, context, meta, reset } = useInterview();
@@ -22,9 +22,14 @@ export default function JDAnalysisPage() {
             Extracted requirements and technical baseline for the target role.
           </p>
         </div>
-        <button onClick={reset} className="btn-secondary">
-          New Analysis
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button onClick={() => exportJdAnalysisToPdf(context)} className="btn-secondary">
+            Export PDF
+          </button>
+          <button onClick={reset} className="btn-secondary">
+            New Analysis
+          </button>
+        </div>
       </div>
 
       <div className="mb-10 space-y-8">
@@ -52,12 +57,12 @@ export default function JDAnalysisPage() {
         {/* Required Skills Box */}
         <div>
           <h3 className="section-label mb-3">Required Skills Baseline</h3>
-          <div className="rounded-2xl border border-cream-dark bg-white p-4 shadow-card dark:border-surface-border dark:bg-surface-card">
-            <div className="flex flex-wrap gap-2">
+          <div className="rounded-2xl border border-cream-dark bg-white p-5 shadow-card dark:border-surface-border dark:bg-surface-card">
+            <div className="flex flex-wrap gap-1.5">
               {(context.extracted_skills_with_levels || []).map((item, idx) => (
                 <span
                   key={`skill-${idx}`}
-                  className="inline-flex items-center rounded-lg bg-accent/10 px-3 py-1.5 text-sm font-semibold text-accent-light dark:bg-accent/20"
+                  className="inline-flex items-center rounded-full bg-accent/[0.06] px-3.5 py-1 text-xs font-semibold text-accent dark:bg-accent-light/10 dark:text-accent-light border border-accent/20 dark:border-accent-light/10"
                 >
                   {item.skill}
                 </span>
